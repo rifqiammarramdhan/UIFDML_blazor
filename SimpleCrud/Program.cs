@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using SimpleCrud.Components;
 using SimpleCrud.DataAccess;
+using SimpleCrud.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,9 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddMudServices();
+builder.Services.AddScoped<EmployeeService>();
 
 var app = builder.Build();
 

@@ -1,7 +1,112 @@
 ﻿@page "/"
 
+@using System.Threading
+@using SimpleCrud.Services
+@using SimpleCrud.ViewModels
+@inject EmployeeService employeeService
+
+@rendermode InteractiveServer
+
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudDataGrid @ref="dataGrid" T="EmployeeViewModel" ServerData="ServerReload" Filterable="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Employee Management System</MudText>
+        <MudSpacer />
+        <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+        AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.EmployeeIdView" Title="Employee Id" />
+        <PropertyColumn Property="x => x.FullName" Title="Full Name" />
+        <PropertyColumn Property="x => x.Department" />
+        <PropertyColumn Property="x => x.DateOfBirth" Format="dd MMM yyyy" Title="Date of Birth"/>
+        <PropertyColumn Property="x => x.Age" />
+        <PropertyColumn Property="x => x.PhoneNumber" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="EmployeeViewModel" />
+    </PagerContent>
+</MudDataGrid>
 
-Welcome to your new app.
+@code {
+    MudDataGrid<EmployeeViewModel> dataGrid;
+    string searchString = null;
+
+    /// <summary>
+    /// Here we simulate getting the paged, filtered and ordered data from the server
+    /// </summary>
+    private async Task<GridData<EmployeeViewModel>> ServerReload(GridState<EmployeeViewModel> state)
+    {
+        IEnumerable<EmployeeViewModel> data = await employeeService.GetAllEmployees();
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.EmployeeIdView.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }).ToArray();
+        var totalItems = data.Count();
+
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if (sortDefinition != null)
+        {
+            switch (sortDefinition.SortBy)
+            {
+                case nameof(EmployeeViewModel.EmployeeIdView):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.EmployeeIdView
+                    );
+                    break;
+                case nameof(EmployeeViewModel.FullName):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.FullName
+                    );
+                    break;
+                case nameof(EmployeeViewModel.Department):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Department
+                    );
+                    break;
+                case nameof(EmployeeViewModel.DateOfBirth):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.DateOfBirth
+                    );
+                    break;
+                case nameof(EmployeeViewModel.Age):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Age
+                    );
+                    break;
+                case nameof(EmployeeViewModel.PhoneNumber):
+                    data = data.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.PhoneNumber
+                    );
+                    break;
+            }
+        }
+
+        var pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new GridData<EmployeeViewModel>
+            {
+                TotalItems = totalItems,
+                Items = pagedData
+            };
+    }
+
+    private Task OnSearch(string text)
+    {
+        searchString = text;
+        return dataGrid.ReloadServerData();
+    }
+}
