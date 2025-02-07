@@ -1,0 +1,78 @@
+﻿@using SimpleCrud.Services
+@using SimpleCrud.ViewModels
+
+@inject EmployeeService EmployeeService
+@inject ISnackbar Snackbar
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+	<MudDialog>
+		<DialogContent>
+			<DataAnnotationsValidator/>
+			<MudGrid Class="mb-5">
+				<MudItem xs="9">
+					@* <label>Full Name</label> *@
+					<MudTextField 
+					Variant="Variant.Outlined"
+					ShrinkLabel
+					Label="Full Name"
+					@bind-Value="model.FullName"
+					For="@(() => model.FullName)"
+					/>
+				</MudItem>
+				<MudItem xs="3">
+					<MudTextField Variant="Variant.Outlined"
+					ShrinkLabel
+					Label="Age"
+					@bind-Value="model.Age"
+					For="@(() => model.Age)" />
+				</MudItem>
+			</MudGrid>
+			<MudDatePicker Class="mb-5" Variant="Variant.Outlined" Label="Date of Birth" @bind-Date="_date" />
+			<MudTextField Class="mb-5" Variant="Variant.Outlined"
+			Label="Department"
+			ShrinkLabel
+			@bind-Value="model.Department"
+			For="@(() => model.Department)" />
+			<MudTextField Variant="Variant.Outlined"
+			ShrinkLabel
+			Label="Phone Number"
+			@bind-Value="model.PhoneNumber"
+			For="@(() => model.PhoneNumber)" />
+		</DialogContent>
+		<DialogActions>
+			<MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Save</MudButton>
+			<MudButton OnClick="Cancel">Cancel</MudButton>
+		</DialogActions>
+	</MudDialog>
+</EditForm>  
+
+@code {
+	[CascadingParameter]
+	private IMudDialogInstance MudDialog { get; set;}
+
+	public EmployeeViewModel model { get; set; } = new EmployeeViewModel();
+	public DateTime? _date { get; set; } = DateTime.Today;
+
+	private async Task OnValidSubmit(EditContext editContext)
+	{
+		if(_date is not null)
+		{
+			model.DateOfBirth = _date.Value;
+		}
+
+		var result = EmployeeService.CreateNewEmployee(model);
+		if (result)
+		{
+			Snackbar.Add("Success create the employee!", Severity.Success);
+			MudDialog.Close();
+		}else
+		{
+			Snackbar.Add("Failed crete employee!", Severity.Error);
+		}
+	}
+
+	private void Cancel()
+	{
+		MudDialog.Cancel();
+	}
+}

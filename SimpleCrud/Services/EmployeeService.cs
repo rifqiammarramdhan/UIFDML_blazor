@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SimpleCrud.DataAccess;
+using SimpleCrud.DataAccess.Entities;
 using SimpleCrud.ViewModels;
 
 namespace SimpleCrud.Services
@@ -25,5 +26,27 @@ namespace SimpleCrud.Services
             }).ToList(); // Tidak perlu ToListAsync() di sini
         }
 
+        public bool CreateNewEmployee(EmployeeViewModel mode)
+        {
+            try
+            {
+                Employee employee = new Employee()
+                {
+                    FullName = mode.FullName,
+                    Department = mode.Department,
+                    DateOfBirth= mode.DateOfBirth,
+                    Age= mode.Age,
+                    PhoneNumber = mode.PhoneNumber,
+                };
+
+                context.Employees.Add(employee);
+                var result = context.SaveChanges();
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }
